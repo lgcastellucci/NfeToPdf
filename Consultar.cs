@@ -2,7 +2,7 @@ using System;
 
 namespace NfeToPdf
 {
-    public class WeatherForecast
+    public class Consultar
     {
         public DateTime Date { get; set; }
 
