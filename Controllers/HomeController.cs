@@ -6,7 +6,7 @@ namespace NfeToPdf.Controllers
     {
         public ActionResult Index()
         {
-            ViewBag.Title = "Home Page";
+            ViewBag.Title = "NfeToPdf";
 
             return View();
         }

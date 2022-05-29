@@ -9,7 +9,9 @@ namespace NfeToPdf.Controllers
 {
     public class ConsultaController : ApiController
     {
-        // GET api/values
+        /// <summary>
+        /// Classe utilizada retornar o PDF da Nfe
+        /// </summary>
         public HttpResponseMessage Get(string prestadorMunicipio = null, string tomadorCNPJ = null, string rps = null)
         {
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
