@@ -14,6 +14,17 @@ namespace NfeToPdf.Controllers
         /// </summary>
         public HttpResponseMessage Get(string prestadorMunicipio = null, string tomadorCNPJ = null, string rps = null)
         {
+            string ip = System.Web.HttpContext.Current.Request.UserHostAddress;
+            string logEntrada = "";
+            logEntrada += "(";
+            logEntrada += "prestadorMunicipio:" + prestadorMunicipio + ", ";
+            logEntrada += "tomadorCNPJ:" + tomadorCNPJ + ", ";
+            logEntrada += "rps: " + rps;
+            logEntrada += ")";
+
+            Acessos acessos = new Acessos();
+            string codAcesso = acessos.Inserir("Get", logEntrada, null, ip);
+            
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
                 return Retorno("0001");
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ))
