@@ -18,7 +18,7 @@ namespace NfeToPdf.Controllers
             HttpRequest httpRequest = HttpContext.Current.Request;
 
             Acessos acessos = new Acessos();
-            string codAcesso = acessos.Inserir("Get", httpRequest.Url.ToString(), null, null, httpRequest.UserHostAddress);
+            string codAcesso = acessos.Inserir("GET", httpRequest.Url.ToString(), null, null, httpRequest.UserHostAddress);
             
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
                 return Retorno("0001");
