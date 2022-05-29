@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Web;
 using System.Web.Http;
 
 namespace NfeToPdf.Controllers
@@ -14,16 +15,10 @@ namespace NfeToPdf.Controllers
         /// </summary>
         public HttpResponseMessage Get(string prestadorMunicipio = null, string tomadorCNPJ = null, string rps = null)
         {
-            string ip = System.Web.HttpContext.Current.Request.UserHostAddress;
-            string logEntrada = "";
-            logEntrada += "(";
-            logEntrada += "prestadorMunicipio:" + prestadorMunicipio + ", ";
-            logEntrada += "tomadorCNPJ:" + tomadorCNPJ + ", ";
-            logEntrada += "rps: " + rps;
-            logEntrada += ")";
+            HttpRequest httpRequest = HttpContext.Current.Request;
 
             Acessos acessos = new Acessos();
-            string codAcesso = acessos.Inserir("Get", logEntrada, null, ip);
+            string codAcesso = acessos.Inserir("Get", httpRequest.Url.ToString(), null, null, httpRequest.UserHostAddress);
             
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
                 return Retorno("0001");
