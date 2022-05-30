@@ -1,4 +1,5 @@
 ﻿using NfeToPdf.Models;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -19,7 +20,7 @@ namespace NfeToPdf.Controllers
 
             Acessos acessos = new Acessos();
             string codAcesso = acessos.Inserir("GET", httpRequest.Url.ToString(), null, null, httpRequest.UserHostAddress);
-            
+
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
                 return Retorno("0001");
             if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ))
@@ -38,6 +39,35 @@ namespace NfeToPdf.Controllers
             if (prestadorMunicipio != "3507506")
             {
                 return Retorno("0008");
+            }
+
+            if ((prestadorMunicipio == "3507506") && tomadorCNPJ == "12345678901234" && (rps == "123456"))
+            {
+                var retorno = new HttpResponseMessage();
+                retorno.StatusCode = HttpStatusCode.NotFound;
+
+                FileStream fileStream = new FileStream(HttpContext.Current.Server.MapPath("~/Arquivos/NfeToPdf.pdf"), FileMode.Open, FileAccess.Read);
+                try
+                {
+                    int length = (int)fileStream.Length;  // get file length
+                    byte[] buffer = new byte[length];     // create buffer
+                    int count;                            // actual number of bytes read
+                    int sum = 0;                          // total number of bytes read
+
+                    // read until Read method returns 0 (end of the stream has been reached)
+                    while ((count = fileStream.Read(buffer, sum, length - sum)) > 0)
+                        sum += count;  // sum is a buffer offset for next reading
+
+                    retorno.StatusCode = HttpStatusCode.OK;
+                    retorno.Content = new ByteArrayContent(buffer);
+                    retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                }
+                finally
+                {
+                    fileStream.Close();
+                }
+              
+                return retorno;
             }
 
             if (prestadorMunicipio == "3507506")
