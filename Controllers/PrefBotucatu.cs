@@ -1,7 +1,7 @@
 ﻿using NfeToPdf.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,153 +12,98 @@ namespace NfeToPdf.Controllers
     public class PrefBotucatu : Controller
     {
         readonly string url = "http://botucatu.bsit-br.com.br/nfse/rps-validation.jsf";
-        public Resposta Executar(string tomadorCNPJ, string rpsNumero)
+        public Resposta Executar(string codAcesso, string tomadorCNPJ, string rpsNumero)
         {
             Resposta resposta = new Resposta();
             resposta.Sucesso = false;
 
+            HttpService httpService = new HttpService(codAcesso);
+            HttpService.Retorno retHttp;
 
             string cookie = "";
             string userId = "";
+            string conteudoPost = "";
 
 
-            HttpClient httpClient1 = new HttpClient();
-            HttpResponseMessage response1 = null;
-            string responseBody1 = "";
-            httpClient1.BaseAddress = new Uri(url);
-            httpClient1.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-            try
+            httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+            httpService.UrlSet(url);
+            retHttp = httpService.ExecuteGet();
+            if ((retHttp.Erro) || (retHttp.HttpStatusCode != HttpStatusCode.OK))
             {
-                response1 = httpClient1.GetAsync(url).Result;
-                responseBody1 = response1.Content.ReadAsStringAsync().Result;
-
-                if (response1.Headers.TryGetValues("Set-Cookie", out IEnumerable<string> valuesCookie))
-                    cookie = valuesCookie.FirstOrDefault();
-                if (response1.Headers.TryGetValues("userId", out IEnumerable<string> valuesUserId))
-                    userId = valuesUserId.FirstOrDefault();
-            }
-            catch (Exception ex)
-            {
-                string messageException = "";
-                messageException = messageException + "Message --- " + ex.Message + "\r\n";
-                messageException = messageException + "HelpLink --- " + ex.HelpLink + "\r\n";
-                messageException = messageException + "Source --- " + ex.Source + "\r\n";
-                messageException = messageException + "StackTrace --- " + ex.StackTrace + "\r\n";
-                messageException = messageException + "TargetSite --- " + ex.TargetSite + "\r\n";
-
-                //RegistraLogService.Log(messageException);
-                return resposta;
-            }
-            if (!string.IsNullOrEmpty(cookie) && !string.IsNullOrEmpty(userId))
-            {
-                //RegistraLogService.Log("Cookie: " + cookie);
-            }
-            else
-            {
-                //RegistraLogService.Log(responseBody1);
                 return resposta;
             }
 
-            HttpClient httpClient2 = new HttpClient(new HttpClientHandler { UseCookies = false });
-            HttpResponseMessage response2 = null;
-            string responseBody2 = "";
-            httpClient2.BaseAddress = new Uri(url);
-            httpClient2.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-            httpClient2.DefaultRequestHeaders.Add("cookie", cookie);
-            httpClient2.DefaultRequestHeaders.Add("userId", userId);
-            string stringConteudo2 = "";
-            stringConteudo2 += "AJAXREQUEST=_viewRoot";
-            stringConteudo2 += "&validationNFSEForm=validationNFSEForm";
-            stringConteudo2 += "&validationNFSEForm%3AtypePerson=J";
-            stringConteudo2 += "&validationNFSEForm%3ApersonCPF=";
-            stringConteudo2 += "&validationNFSEForm%3AverificationCode=";
-            stringConteudo2 += "&javax.faces.ViewState=j_id1";
-            stringConteudo2 += "&validationNFSEForm%3Aj_id24=validationNFSEForm%3Aj_id24&";
-            StringContent stringContent2 = new StringContent(stringConteudo2, Encoding.UTF8, "application/x-www-form-urlencoded");
-            try
+            foreach (KeyValuePair<string, string> header in retHttp.Headers)
             {
-                response2 = httpClient2.PostAsync(url, stringContent2).Result;
-                responseBody2 = response2.Content.ReadAsStringAsync().Result;
+                if (header.Key == "Set-Cookie")
+                    cookie = header.Value;
+                if (header.Key == "userId")
+                    userId = header.Value;
             }
-            catch (Exception ex)
-            {
-                string messageException = "";
-                messageException = messageException + "Message --- " + ex.Message + "\r\n";
-                messageException = messageException + "HelpLink --- " + ex.HelpLink + "\r\n";
-                messageException = messageException + "Source --- " + ex.Source + "\r\n";
-                messageException = messageException + "StackTrace --- " + ex.StackTrace + "\r\n";
-                messageException = messageException + "TargetSite --- " + ex.TargetSite + "\r\n";
 
-                //RegistraLogService.Log(messageException);
+
+            httpService.HeaderAcceptClear();
+            httpService.HeaderClear();
+            httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+            httpService.HeaderAdd("cookie", cookie);
+            httpService.HeaderAdd("userId", userId);
+            httpService.UrlSet(url);
+            conteudoPost = "";
+            conteudoPost += "AJAXREQUEST=_viewRoot";
+            conteudoPost += "&validationNFSEForm=validationNFSEForm";
+            conteudoPost += "&validationNFSEForm%3AtypePerson=J";
+            conteudoPost += "&validationNFSEForm%3ApersonCPF=";
+            conteudoPost += "&validationNFSEForm%3AverificationCode=";
+            conteudoPost += "&javax.faces.ViewState=j_id1";
+            conteudoPost += "&validationNFSEForm%3Aj_id24=validationNFSEForm%3Aj_id24&";
+            httpService.PayLoadSet(conteudoPost, Encoding.UTF8, "application/x-www-form-urlencoded");
+            retHttp = httpService.ExecutePost();
+            if ((retHttp.Erro) || (retHttp.HttpStatusCode != HttpStatusCode.OK))
+            {
                 return resposta;
             }
 
-            if (responseBody2.Contains("INFORMAÇÕES PARA VALIDAÇÃO NFSE"))
+            if (!retHttp.Body.Contains("INFORMAÇÕES PARA VALIDAÇÃO NFSE"))
             {
-                //RegistraLogService.Log("INFORMAÇÕES PARA VALIDAÇÃO NFSE");
-            }
-            else
-            {
-                //RegistraLogService.Log(responseBody2);
                 return resposta;
             }
 
 
-
-
-            HttpClient httpClient3 = new HttpClient(new HttpClientHandler { UseCookies = false });
-            HttpResponseMessage response3 = null;
-            string responseBody3 = "";
-            httpClient3.BaseAddress = new Uri(url);
-            httpClient3.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-            httpClient3.DefaultRequestHeaders.Add("cookie", cookie);
-            httpClient3.DefaultRequestHeaders.Add("userId", userId);
-            string stringConteudo3 = "";
-            stringConteudo3 += "AJAXREQUEST=_viewRoot";
-            stringConteudo3 += "&validationNFSEForm=validationNFSEForm";
-            stringConteudo3 += "&validationNFSEForm%3AtypePerson=J";
-            stringConteudo3 += "&validationNFSEForm%3ApersonCNPJ=" + tomadorCNPJ;
-            stringConteudo3 += "&validationNFSEForm%3AverificationCode=" + rpsNumero;
-            stringConteudo3 += "&javax.faces.ViewState=j_id1";
-            stringConteudo3 += "&validationNFSEForm%3Averify=validationNFSEForm%3Averify&";
-            StringContent stringContent3 = new StringContent(stringConteudo3, Encoding.UTF8, "application/x-www-form-urlencoded");
-            try
+            httpService.HeaderAcceptClear();
+            httpService.HeaderClear();
+            httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+            httpService.HeaderAdd("cookie", cookie);
+            httpService.HeaderAdd("userId", userId);
+            conteudoPost = "";
+            conteudoPost += "AJAXREQUEST=_viewRoot";
+            conteudoPost += "&validationNFSEForm=validationNFSEForm";
+            conteudoPost += "&validationNFSEForm%3AtypePerson=J";
+            conteudoPost += "&validationNFSEForm%3ApersonCNPJ=" + tomadorCNPJ;
+            conteudoPost += "&validationNFSEForm%3AverificationCode=" + rpsNumero;
+            conteudoPost += "&javax.faces.ViewState=j_id1";
+            conteudoPost += "&validationNFSEForm%3Averify=validationNFSEForm%3Averify&";
+            httpService.PayLoadSet(conteudoPost, Encoding.UTF8, "application/x-www-form-urlencoded");
+            retHttp = httpService.ExecutePost();
+            if ((retHttp.Erro) || (retHttp.HttpStatusCode != HttpStatusCode.OK))
             {
-                response3 = httpClient3.PostAsync(url, stringContent3).Result;
-                responseBody3 = response3.Content.ReadAsStringAsync().Result;
-            }
-            catch (Exception ex)
-            {
-                string messageException = "";
-                messageException = messageException + "Message --- " + ex.Message + "\r\n";
-                messageException = messageException + "HelpLink --- " + ex.HelpLink + "\r\n";
-                messageException = messageException + "Source --- " + ex.Source + "\r\n";
-                messageException = messageException + "StackTrace --- " + ex.StackTrace + "\r\n";
-                messageException = messageException + "TargetSite --- " + ex.TargetSite + "\r\n";
-
-                //RegistraLogService.Log(messageException);
                 return resposta;
             }
-            if (responseBody3.Contains("Foi encontrada a Nota com os dados informados"))
-            {
-                //RegistraLogService.Log("Foi encontrada a Nota com os dados informados");
 
+            if (retHttp.Body.Contains("Foi encontrada a Nota com os dados informados"))
+            {
                 string campoRazaoTomador = "<span id=\"basicNFSEForm:name\" style=\"margin:0px 0px 0px 0px; float: left;\">";
-                if (responseBody3.Contains(campoRazaoTomador))
+                if (retHttp.Body.Contains(campoRazaoTomador))
                 {
-                    campoRazaoTomador = responseBody3.Substring(responseBody3.IndexOf(campoRazaoTomador) + campoRazaoTomador.Length, 100);
+                    campoRazaoTomador = retHttp.Body.Substring(retHttp.Body.IndexOf(campoRazaoTomador) + campoRazaoTomador.Length, 100);
                     campoRazaoTomador = campoRazaoTomador.Substring(0, campoRazaoTomador.IndexOf("</span>"));
-
-                    //RegistraLogService.Log(campoRazaoTomador);
                 }
             }
-            else if (responseBody3.Contains("É necessário informar o CPF ou CNPJ válido do prestador"))
+            else if (retHttp.Body.Contains("É necessário informar o CPF ou CNPJ válido do prestador"))
             {
-                //RegistraLogService.Log("É necessário informar o CPF ou CNPJ válido do prestador");
+                return resposta;
             }
             else
             {
-                //RegistraLogService.Log(responseBody3);
                 return resposta;
             }
 
@@ -198,10 +143,6 @@ namespace NfeToPdf.Controllers
                 resposta.Sucesso = true;
                 resposta.PdfArrayBytes = responseBody4;
                 resposta.PdfBase64 = Convert.ToBase64String(responseBody4);
-
-                //string caminhoArquivo = AppContext.BaseDirectory;
-                //System.IO.File.WriteAllBytes(Path.Combine(caminhoArquivo, rpsNumero + ".pdf"), responseBody4);
-                //RegistraLogService.Log(Path.Combine(caminhoArquivo, numeroRPS + ".pdf"));
 
                 return resposta;
             }

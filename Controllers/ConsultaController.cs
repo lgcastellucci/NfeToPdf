@@ -73,7 +73,7 @@ namespace NfeToPdf.Controllers
             if (prestadorMunicipio == "3507506")
             {
                 PrefBotucatu pref = new PrefBotucatu();
-                Resposta respostaPref = pref.Executar(tomadorCNPJ, rps);
+                Resposta respostaPref = pref.Executar(codAcesso, tomadorCNPJ, rps);
 
                 if (respostaPref.Sucesso)
                 {
