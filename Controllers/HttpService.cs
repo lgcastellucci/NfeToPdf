@@ -88,9 +88,13 @@ namespace NfeToPdf.Controllers
             _timeout = timeout;
         }
 
-        public void ResultByte()
+        public void ResultByteSet()
         {
             _resultBodyString = false;
+        }
+        public void ResultStringSet()
+        {
+            _resultBodyString = true;
         }
 
         public HttpService(string codAcesso)
