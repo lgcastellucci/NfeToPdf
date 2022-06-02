@@ -9,6 +9,9 @@ namespace NfeToPdf.Controllers
         readonly string connectionString = "";
         public string Inserir(string codAcesso = null, string url = null, string requicao = null)
         {
+            if (string.IsNullOrEmpty(codAcesso))
+                return "";
+
             string codAcessoExterno = "";
 
             StringBuilder sbInstrucao = new StringBuilder();
@@ -50,6 +53,9 @@ namespace NfeToPdf.Controllers
         }
         public void Atualizar(string codAcessoExterno, string resposta, int respostaStatusCode)
         {
+            if (string.IsNullOrEmpty(codAcessoExterno))
+                return;
+
             StringBuilder sbInstrucao = new StringBuilder();
             sbInstrucao.Append(" UPDATE ACESSOS_EXTERNOS ");
             sbInstrucao.Append(" SET ");

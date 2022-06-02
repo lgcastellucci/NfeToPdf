@@ -17,11 +17,13 @@ namespace NfeToPdf.Controllers
         private string _codAcesso;
 
         private AuthenticationHeaderValue _authenticationHeader;
+        private HttpClientHandler _httpClientHandler;
         private List<KeyValuePair<string, string>> _headers;
         private List<MediaTypeWithQualityHeaderValue> _headersAccept;
         private string _content;
         private StringContent _stringContent;
         private int _timeout;
+        public bool _resultBodyString;
 
 
         /// <summary>
@@ -33,6 +35,7 @@ namespace NfeToPdf.Controllers
             public string MensagemErro { get; set; }
             public HttpStatusCode HttpStatusCode { get; set; }
             public string Body { get; set; }
+            public byte[] BodyArrayByte { get; set; }
             public List<KeyValuePair<string, string>> Headers { get; set; }
         }
 
@@ -40,6 +43,11 @@ namespace NfeToPdf.Controllers
         {
             _url = url;
         }
+        public void HandlerSet(HttpClientHandler httpClientHandler)
+        {
+            _httpClientHandler = httpClientHandler;
+        }
+
         public void AuthenticationSet(AuthenticationHeaderValue authenticationHeader)
         {
             _authenticationHeader = authenticationHeader;
@@ -80,11 +88,16 @@ namespace NfeToPdf.Controllers
             _timeout = timeout;
         }
 
+        public void ResultByte()
+        {
+            _resultBodyString = false;
+        }
 
         public HttpService(string codAcesso)
         {
             _codAcesso = codAcesso;
             _timeout = 15;
+            _resultBodyString = true;
         }
 
         public Retorno ExecuteGet()
@@ -98,7 +111,11 @@ namespace NfeToPdf.Controllers
             AcessosExternos acessosExternos = new AcessosExternos();
             string codAcessoExterno = acessosExternos.Inserir(_codAcesso, _url, _content);
 
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = null;
+            if (_httpClientHandler != null)
+                httpClient = new HttpClient(_httpClientHandler);
+            else
+                httpClient = new HttpClient();
 
             try
             {
@@ -140,6 +157,7 @@ namespace NfeToPdf.Controllers
 
             HttpResponseMessage response = null;
             string responseBody = "";
+            byte[] responseBodyArrayByte = null;
             try
             {
                 httpClient.Timeout = TimeSpan.FromMinutes(_timeout);
@@ -152,7 +170,7 @@ namespace NfeToPdf.Controllers
                     retorno.Erro = true;
                     retorno.MensagemErro = "Erro consultando externo.";
 
-                   acessosExternos.Atualizar(codAcessoExterno, "TaskCanceledException", 404);
+                    acessosExternos.Atualizar(codAcessoExterno, "TaskCanceledException", 404);
                 }
                 else if (ex.InnerException.ToString().Contains("O nome remoto não pôde ser resolvido"))
                 {
@@ -188,7 +206,11 @@ namespace NfeToPdf.Controllers
 
             try
             {
-                responseBody = await response.Content.ReadAsStringAsync();
+                if (_resultBodyString)
+                    responseBody = response.Content.ReadAsStringAsync().Result;
+                else
+                    responseBodyArrayByte = response.Content.ReadAsByteArrayAsync().Result;
+
             }
             catch (Exception ex)
             {
@@ -202,6 +224,7 @@ namespace NfeToPdf.Controllers
             responseBody = responseBody.Replace("'", "");
 
             retorno.Body = responseBody;
+            retorno.BodyArrayByte = responseBodyArrayByte;
             retorno.HttpStatusCode = response.StatusCode;
             retorno.Headers = new List<KeyValuePair<string, string>>();
             foreach (var headerItem in response.Headers)
