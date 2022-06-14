@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -22,10 +23,17 @@ namespace NfeToPdf.Controllers
             HttpService httpService = new HttpService("");
             HttpService.Retorno retHttp;
 
+            Guid guid = Guid.NewGuid();
+            string nomeArquivo = guid.ToString();
+
             string ViewState = "";
             string ViewStateGenerator = "";
             string ViewStateValidation = "";
             string Cookie = "";
+            StringBuilder arquivos = new StringBuilder();
+
+            if (!Directory.Exists(HttpContext.Current.Server.MapPath("~/Arquivos/Imagens")))
+                Directory.CreateDirectory(HttpContext.Current.Server.MapPath("~/Arquivos/Imagens"));
 
             int imgDiferentesGeradas = 0;
             while (imgDiferentesGeradas < imgDiferentes)
@@ -60,7 +68,6 @@ namespace NfeToPdf.Controllers
                         ViewStateValidation = input.Attributes["value"].Value;
                 }
 
-                string nomeArquivo = DateTime.Now.ToString("yyyyMMddHHmmss");
                 int imgIguaisGeradas = 0;
                 while (imgIguaisGeradas < imgIguais)
                 {
@@ -77,15 +84,9 @@ namespace NfeToPdf.Controllers
                     }
                     else if (Encoding.UTF8.GetString(retHttp.BodyArrayByte).Contains("JFIF"))
                     {
-                        var retorno = new HttpResponseMessage();
-                        retorno.StatusCode = HttpStatusCode.OK;
-                        retorno.Content = new ByteArrayContent(retHttp.BodyArrayByte);
-                        retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-
-                        File.WriteAllBytes(HttpContext.Current.Server.MapPath("~/Arquivos/Imagens/" + nomeArquivo + "_" + imgIguaisGeradas.ToString().PadLeft(2, '0') + ".jpeg"), retHttp.BodyArrayByte);
-
-                        if (imgIguais == 1)
-                            return retorno;
+                        string nomeArquivoJpeg = nomeArquivo + "_" + imgDiferentesGeradas.ToString().PadLeft(3, '0') + "_" + imgIguaisGeradas.ToString().PadLeft(3, '0') + ".jpeg";
+                        arquivos.AppendLine(HttpContext.Current.Server.MapPath("~/Arquivos/Imagens/" + nomeArquivoJpeg));
+                        File.WriteAllBytes(HttpContext.Current.Server.MapPath("~/Arquivos/Imagens/" + nomeArquivoJpeg), retHttp.BodyArrayByte);
 
                         imgIguaisGeradas++;
                     }
@@ -96,8 +97,41 @@ namespace NfeToPdf.Controllers
                 imgDiferentesGeradas++;
             }
 
+            if ((imgDiferentes == 1) && (imgIguais == 1))
+            {
+                byte[] arquivoRetorno = File.ReadAllBytes(arquivos.ToString().Replace("\n","").Replace("\r",""));
+                var retorno = new HttpResponseMessage();
+                retorno.StatusCode = HttpStatusCode.OK;
+                retorno.Content = new ByteArrayContent(arquivoRetorno);
+                retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+                return retorno;
+            }
+
             if (imgDiferentes == imgDiferentesGeradas)
-                return Retorno("Arquivos gravados");
+            {
+                string nomeArquivoZip = HttpContext.Current.Server.MapPath("~/Arquivos/Imagens/" + nomeArquivo + ".zip");
+                string[] delim = { Environment.NewLine, "\n" };
+                string[] lines = arquivos.ToString().Split(delim, StringSplitOptions.None);
+
+                using (var stream = File.OpenWrite(nomeArquivoZip))
+                {
+                    using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create))
+                    {
+                        foreach (string line in lines)
+                        {
+                            if (!string.IsNullOrEmpty(line))
+                                archive.CreateEntryFromFile(line, Path.GetFileName(line), CompressionLevel.Optimal);
+                        }
+                    }
+                }
+
+                byte[] arquivoRetorno = File.ReadAllBytes(nomeArquivoZip);
+                var retorno = new HttpResponseMessage();
+                retorno.StatusCode = HttpStatusCode.OK;
+                retorno.Content = new ByteArrayContent(arquivoRetorno);
+                retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("application/zip");
+                return retorno;
+            }
 
             return Retorno("0003");
         }
