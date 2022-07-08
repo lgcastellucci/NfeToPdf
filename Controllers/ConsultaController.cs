@@ -14,29 +14,36 @@ namespace NfeToPdf.Controllers
         /// <summary>
         /// Classe utilizada retornar o PDF da Nfe
         /// </summary>
-        public HttpResponseMessage Get(string prestadorMunicipio = null, string tomadorCNPJ = null, string rps = null)
+        public HttpResponseMessage Get(string prestadorMunicipio = null, string tomadorCNPJ = null, string rps = null, string nroNota = null, string codVerificacao = null)
         {
             HttpRequest httpRequest = HttpContext.Current.Request;
 
             Acessos acessos = new Acessos();
             string codAcesso = acessos.Inserir("GET", httpRequest.Url.ToString(), null, null, httpRequest.UserHostAddress);
-
-            if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
-                return Retorno("0001");
-            if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ))
-                return Retorno("0002");
-            if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(rps))
-                return Retorno("0003");
-            if (string.IsNullOrEmpty(prestadorMunicipio))
-                return Retorno("0004");
-            if (string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
-                return Retorno("0005");
-            if (string.IsNullOrEmpty(tomadorCNPJ))
-                return Retorno("0006");
-            if (string.IsNullOrEmpty(rps))
-                return Retorno("0007");
-
-            if (prestadorMunicipio != "3507506")
+            
+            if (prestadorMunicipio == "3507506") //botucatu
+            {
+                if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
+                    return Retorno("0001");
+                if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ))
+                    return Retorno("0002");
+                if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(rps))
+                    return Retorno("0003");
+                if (string.IsNullOrEmpty(prestadorMunicipio))
+                    return Retorno("0004");
+                if (string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(rps))
+                    return Retorno("0005");
+                if (string.IsNullOrEmpty(tomadorCNPJ))
+                    return Retorno("0006");
+                if (string.IsNullOrEmpty(rps))
+                    return Retorno("0007");
+            }
+            else if (prestadorMunicipio == "3511102") //catanduca
+            {
+                if (string.IsNullOrEmpty(prestadorMunicipio) && string.IsNullOrEmpty(tomadorCNPJ) && string.IsNullOrEmpty(nroNota) && string.IsNullOrEmpty(codVerificacao))
+                    return Retorno("0001");
+            }
+            else
             {
                 return Retorno("0008");
             }
@@ -66,7 +73,7 @@ namespace NfeToPdf.Controllers
                 {
                     fileStream.Close();
                 }
-              
+
                 return retorno;
             }
 
@@ -74,6 +81,24 @@ namespace NfeToPdf.Controllers
             {
                 PrefBotucatu pref = new PrefBotucatu();
                 Resposta respostaPref = pref.Executar(codAcesso, tomadorCNPJ, rps);
+
+                if (respostaPref.Sucesso)
+                {
+                    var retorno = new HttpResponseMessage();
+                    retorno.StatusCode = HttpStatusCode.OK;
+                    retorno.Content = new ByteArrayContent(respostaPref.PdfArrayBytes);
+                    retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                    return retorno;
+                }
+                else
+                {
+                    return Retorno("0009");
+                }
+            }
+            else if (prestadorMunicipio == "3511102")
+            {
+                PrefCatanduva pref = new PrefCatanduva();
+                Resposta respostaPref = pref.Executar(codAcesso, tomadorCNPJ, nroNota, codVerificacao);
 
                 if (respostaPref.Sucesso)
                 {

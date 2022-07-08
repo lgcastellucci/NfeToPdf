@@ -338,6 +338,7 @@
     <Compile Include="Controllers\Acessos.cs" />
     <Compile Include="Controllers\ConsultaCaptchaController.cs" />
     <Compile Include="Controllers\HttpService.cs" />
+    <Compile Include="Controllers\PrefCatanduva.cs" />
     <Compile Include="Controllers\PrefBotucatu.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ConsultaController.cs" />
