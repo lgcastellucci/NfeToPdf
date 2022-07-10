@@ -23,7 +23,7 @@ namespace NfeToPdf.Controllers
             string cookie = "";
             string conteudoPost;
 
-            //passo 1 - Dar um get na pagina para receber um cookie
+            #region Passo 1 - Dar um get na pagina para receber um cookie
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
             httpService.UrlSet(url);
             retHttp = httpService.ExecuteGet();
@@ -48,8 +48,9 @@ namespace NfeToPdf.Controllers
                     viewState = viewState.Substring(0, viewState.IndexOf("\""));
                 }
             }
+            #endregion
 
-            //passo 2 = autenticando os dados da nota
+            #region Passo 2 = autenticando os dados da nota
             httpService.HeaderAcceptClear();
             httpService.HeaderClear();
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
@@ -76,8 +77,9 @@ namespace NfeToPdf.Controllers
             {
                 return resposta;
             }
+            #endregion
 
-            //passo 3 = pegando o pdf da nota
+            #region Passo 3 = pegando o pdf da nota
             httpService.HeaderAcceptClear();
             httpService.HeaderClear();
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
@@ -105,12 +107,8 @@ namespace NfeToPdf.Controllers
 
                 return resposta;
             }
-            else
-            {
+            #endregion
 
-                //RegistraLogService.Log(Encoding.UTF8.GetString(responseBody4));
-                return resposta;
-            }
 
             return resposta;
         }

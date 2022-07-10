@@ -22,9 +22,9 @@ namespace NfeToPdf.Controllers
 
             string cookie = "";
             string userId = "";
-            string conteudoPost; 
+            string conteudoPost;
 
-            //passo 1 - Dar um get na pagina para receber um cookie
+            #region Passo 1 - Dar um get na pagina para receber um cookie
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
             httpService.UrlSet(url);
             retHttp = httpService.ExecuteGet();
@@ -40,8 +40,9 @@ namespace NfeToPdf.Controllers
                 if (header.Key == "userId")
                     userId = header.Value;
             }
+            #endregion
 
-
+            #region Passo 2 -Validando o cookie
             httpService.HeaderAcceptClear();
             httpService.HeaderClear();
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
@@ -67,8 +68,9 @@ namespace NfeToPdf.Controllers
             {
                 return resposta;
             }
+            #endregion
 
-
+            #region Passo 3 -Validando dados da nota (cnpj e rps)
             httpService.HeaderAcceptClear();
             httpService.HeaderClear();
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
@@ -89,69 +91,40 @@ namespace NfeToPdf.Controllers
                 return resposta;
             }
 
-            if (retHttp.Body.Contains("Foi encontrada a Nota com os dados informados"))
-            {
-                string campoRazaoTomador = "<span id=\"basicNFSEForm:name\" style=\"margin:0px 0px 0px 0px; float: left;\">";
-                if (retHttp.Body.Contains(campoRazaoTomador))
-                {
-                    campoRazaoTomador = retHttp.Body.Substring(retHttp.Body.IndexOf(campoRazaoTomador) + campoRazaoTomador.Length, 100);
-                    campoRazaoTomador = campoRazaoTomador.Substring(0, campoRazaoTomador.IndexOf("</span>"));
-                }
-            }
-            else if (retHttp.Body.Contains("É necessário informar o CPF ou CNPJ válido do prestador"))
+            if (!retHttp.Body.Contains("Foi encontrada a Nota com os dados informados"))
             {
                 return resposta;
             }
-            else
+            #endregion
+
+            #region Passo 4 = pegando o pdf da nota
+            httpService.HeaderAcceptClear();
+            httpService.HeaderClear();
+            httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
+            httpService.HeaderAdd("cookie", cookie);
+            httpService.HeaderAdd("userId", userId);
+            conteudoPost = "";
+            conteudoPost += "basicNFSEForm=basicNFSEForm";
+            conteudoPost += "&javax.faces.ViewState=j_id1";
+            conteudoPost += "&basicNFSEForm%3AnfseGenerate=basicNFSEForm%3AnfseGenerate";
+            httpService.PayLoadSet(conteudoPost, Encoding.UTF8, "application/x-www-form-urlencoded");
+            httpService.ResultByteSet();
+            retHttp = httpService.ExecutePost();
+            if ((retHttp.Erro) || (retHttp.HttpStatusCode != HttpStatusCode.OK))
             {
                 return resposta;
             }
 
-
-            HttpClient httpClient4 = new HttpClient(new HttpClientHandler { UseCookies = false });
-            HttpResponseMessage response4 = null;
-            byte[] responseBody4;
-            httpClient4.BaseAddress = new Uri(url);
-            httpClient4.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-            httpClient4.DefaultRequestHeaders.Add("cookie", cookie);
-            httpClient4.DefaultRequestHeaders.Add("userId", userId);
-            string stringConteudo4 = "";
-            stringConteudo4 += "basicNFSEForm=basicNFSEForm";
-            stringConteudo4 += "&javax.faces.ViewState=j_id1";
-            stringConteudo4 += "&basicNFSEForm%3AnfseGenerate=basicNFSEForm%3AnfseGenerate";
-            StringContent stringContent4 = new StringContent(stringConteudo4, Encoding.UTF8, "application/x-www-form-urlencoded");
-            try
-            {
-                response4 = httpClient4.PostAsync(url, stringContent4).Result;
-                responseBody4 = response4.Content.ReadAsByteArrayAsync().Result;
-            }
-            catch (Exception ex)
-            {
-                string messageException = "";
-                messageException = messageException + "Message --- " + ex.Message + "\r\n";
-                messageException = messageException + "HelpLink --- " + ex.HelpLink + "\r\n";
-                messageException = messageException + "Source --- " + ex.Source + "\r\n";
-                messageException = messageException + "StackTrace --- " + ex.StackTrace + "\r\n";
-                messageException = messageException + "TargetSite --- " + ex.TargetSite + "\r\n";
-
-                //RegistraLogService.Log(messageException);
-                return resposta;
-            }
-
-            if (Encoding.UTF8.GetString(responseBody4).Contains("PDF-1.4"))
+            if ((Encoding.UTF8.GetString(retHttp.BodyArrayByte).Contains("PDF-1.4")) || (Encoding.UTF8.GetString(retHttp.BodyArrayByte).Contains("PDF-1.5")))
             {
                 resposta.Sucesso = true;
-                resposta.PdfArrayBytes = responseBody4;
-                resposta.PdfBase64 = Convert.ToBase64String(responseBody4);
+                resposta.PdfArrayBytes = retHttp.BodyArrayByte;
+                resposta.PdfBase64 = Convert.ToBase64String(retHttp.BodyArrayByte);
 
                 return resposta;
             }
-            else
-            {
+            #endregion
 
-                //RegistraLogService.Log(Encoding.UTF8.GetString(responseBody4));
-                return resposta;
-            }
 
             return resposta;
         }
