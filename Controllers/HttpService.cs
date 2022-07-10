@@ -299,6 +299,7 @@ namespace NfeToPdf.Controllers
 
             HttpResponseMessage response = null;
             string responseBody = "";
+            byte[] responseBodyArrayByte = null;
             try
             {
                 httpClient.Timeout = TimeSpan.FromMinutes(_timeout);
@@ -347,7 +348,10 @@ namespace NfeToPdf.Controllers
 
             try
             {
-                responseBody = await response.Content.ReadAsStringAsync();
+                if (_resultBodyString)
+                    responseBody = response.Content.ReadAsStringAsync().Result;
+                else
+                    responseBodyArrayByte = response.Content.ReadAsByteArrayAsync().Result;
             }
             catch (Exception ex)
             {
@@ -361,6 +365,7 @@ namespace NfeToPdf.Controllers
             responseBody = responseBody.Replace("'", "");
 
             retorno.Body = responseBody;
+            retorno.BodyArrayByte = responseBodyArrayByte;
             retorno.HttpStatusCode = response.StatusCode;
             retorno.Headers = new List<KeyValuePair<string, string>>();
             foreach (var headerItem in response.Headers)

@@ -21,10 +21,9 @@ namespace NfeToPdf.Controllers
             HttpService.Retorno retHttp;
 
             string cookie = "";
-            string userId = "";
-            string conteudoPost = "";
+            string conteudoPost;
 
-            //passo 1 - dando um get na pagins para receber um cookie
+            //passo 1 - Dar um get na pagina para receber um cookie
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
             httpService.UrlSet(url);
             retHttp = httpService.ExecuteGet();
@@ -38,7 +37,7 @@ namespace NfeToPdf.Controllers
                 if (header.Key == "Set-Cookie")
                     cookie = header.Value;
             }
-            
+
             string viewState = "";  //<input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="-2933921452764066748:-2529331640149675970" autocomplete="off" />
             if (retHttp.Body.Contains("javax.faces.ViewState"))
             {
@@ -84,80 +83,25 @@ namespace NfeToPdf.Controllers
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
             httpService.HeaderAdd("cookie", cookie);
 
-            request.AddParameter("formAutenticidade", "formAutenticidade");
-            request.AddParameter("formAutenticidade:j_idt136", "");
-            request.AddParameter("javax.faces.ViewState", "-2933921452764066748:-2529331640149675970");
+            List<KeyValuePair<string, string>> keyValues = new List<KeyValuePair<string, string>>();
+            keyValues.Add(new KeyValuePair<string, string>("formAutenticidade", "formAutenticidade"));
+            keyValues.Add(new KeyValuePair<string, string>("formAutenticidade:j_idt136", ""));
+            keyValues.Add(new KeyValuePair<string, string>("javax.faces.ViewState", viewState));
+            string urlEncodedString = new FormUrlEncodedContent(keyValues).ReadAsStringAsync().Result;
 
-            
-            conteudoPost = "";
-            conteudoPost += "AJAXREQUEST=_viewRoot";
-            conteudoPost += "&validationNFSEForm=validationNFSEForm";
-            conteudoPost += "&validationNFSEForm%3AtypePerson=J";
-            conteudoPost += "&validationNFSEForm%3ApersonCNPJ=" + tomadorCNPJ;
-            conteudoPost += "&validationNFSEForm%3AverificationCode=" + nroNota;
-            conteudoPost += "&javax.faces.ViewState=j_id1";
-            conteudoPost += "&validationNFSEForm%3Averify=validationNFSEForm%3Averify&";
-            httpService.PayLoadSet(conteudoPost, Encoding.UTF8, "application/x-www-form-urlencoded");
+            httpService.ResultByteSet();
+            httpService.PayLoadSet(urlEncodedString, Encoding.UTF8, "application/x-www-form-urlencoded");
             retHttp = httpService.ExecutePost();
             if ((retHttp.Erro) || (retHttp.HttpStatusCode != HttpStatusCode.OK))
             {
                 return resposta;
             }
-
-            if (retHttp.Body.Contains("Foi encontrada a Nota com os dados informados"))
-            {
-                string campoRazaoTomador = "<span id=\"basicNFSEForm:name\" style=\"margin:0px 0px 0px 0px; float: left;\">";
-                if (retHttp.Body.Contains(campoRazaoTomador))
-                {
-                    campoRazaoTomador = retHttp.Body.Substring(retHttp.Body.IndexOf(campoRazaoTomador) + campoRazaoTomador.Length, 100);
-                    campoRazaoTomador = campoRazaoTomador.Substring(0, campoRazaoTomador.IndexOf("</span>"));
-                }
-            }
-            else if (retHttp.Body.Contains("É necessário informar o CPF ou CNPJ válido do prestador"))
-            {
-                return resposta;
-            }
-            else
-            {
-                return resposta;
-            }
-
-
-            HttpClient httpClient4 = new HttpClient(new HttpClientHandler { UseCookies = false });
-            HttpResponseMessage response4 = null;
-            byte[] responseBody4;
-            httpClient4.BaseAddress = new Uri(url);
-            httpClient4.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-            httpClient4.DefaultRequestHeaders.Add("cookie", cookie);
-            httpClient4.DefaultRequestHeaders.Add("userId", userId);
-            string stringConteudo4 = "";
-            stringConteudo4 += "basicNFSEForm=basicNFSEForm";
-            stringConteudo4 += "&javax.faces.ViewState=j_id1";
-            stringConteudo4 += "&basicNFSEForm%3AnfseGenerate=basicNFSEForm%3AnfseGenerate";
-            StringContent stringContent4 = new StringContent(stringConteudo4, Encoding.UTF8, "application/x-www-form-urlencoded");
-            try
-            {
-                response4 = httpClient4.PostAsync(url, stringContent4).Result;
-                responseBody4 = response4.Content.ReadAsByteArrayAsync().Result;
-            }
-            catch (Exception ex)
-            {
-                string messageException = "";
-                messageException = messageException + "Message --- " + ex.Message + "\r\n";
-                messageException = messageException + "HelpLink --- " + ex.HelpLink + "\r\n";
-                messageException = messageException + "Source --- " + ex.Source + "\r\n";
-                messageException = messageException + "StackTrace --- " + ex.StackTrace + "\r\n";
-                messageException = messageException + "TargetSite --- " + ex.TargetSite + "\r\n";
-
-                //RegistraLogService.Log(messageException);
-                return resposta;
-            }
-
-            if (Encoding.UTF8.GetString(responseBody4).Contains("PDF-1.4"))
+          
+            if ((Encoding.UTF8.GetString(retHttp.BodyArrayByte).Contains("PDF-1.4")) || (Encoding.UTF8.GetString(retHttp.BodyArrayByte).Contains("PDF-1.5")))
             {
                 resposta.Sucesso = true;
-                resposta.PdfArrayBytes = responseBody4;
-                resposta.PdfBase64 = Convert.ToBase64String(responseBody4);
+                resposta.PdfArrayBytes = retHttp.BodyArrayByte;
+                resposta.PdfBase64 = Convert.ToBase64String(retHttp.BodyArrayByte);
 
                 return resposta;
             }

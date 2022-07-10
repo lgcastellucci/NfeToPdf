@@ -22,9 +22,9 @@ namespace NfeToPdf.Controllers
 
             string cookie = "";
             string userId = "";
-            string conteudoPost = "";
+            string conteudoPost 
 
-
+            //passo 1 - Dar um get na pagina para receber um cookie
             httpService.HeaderAcceptAdd(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
             httpService.UrlSet(url);
             retHttp = httpService.ExecuteGet();
