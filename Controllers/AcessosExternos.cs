@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using System.Configuration;
+using System.Data.SqlClient;
 using System.Text;
 using System.Web.Mvc;
 
@@ -6,7 +7,7 @@ namespace NfeToPdf.Controllers
 {
     public class AcessosExternos : Controller
     {
-        readonly string connectionString = "Data Source=localhost;Initial Catalog=banco;Persist Security Info=True;User ID=usuario;Password=123";
+        readonly string connectionString = ConfigurationManager.ConnectionStrings["dbConnection"].ConnectionString;
         public string Inserir(string codAcesso = null, string url = null, string requicao = null)
         {
             if (string.IsNullOrEmpty(codAcesso))
