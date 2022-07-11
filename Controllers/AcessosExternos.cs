@@ -6,7 +6,7 @@ namespace NfeToPdf.Controllers
 {
     public class AcessosExternos : Controller
     {
-        readonly string connectionString = "";
+        readonly string connectionString = "Data Source=localhost;Initial Catalog=banco;Persist Security Info=True;User ID=usuario;Password=123";
         public string Inserir(string codAcesso = null, string url = null, string requicao = null)
         {
             if (string.IsNullOrEmpty(codAcesso))
