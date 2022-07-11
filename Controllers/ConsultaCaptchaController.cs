@@ -20,6 +20,11 @@ namespace NfeToPdf.Controllers
         /// </summary>
         public HttpResponseMessage Get(int imgDiferentes = 1, int imgIguais = 1)
         {
+            /****************************/
+            /* AINDA EM DESENVOLVIMENTO */
+            /****************************/
+
+
             HttpService httpService = new HttpService("");
             HttpService.Retorno retHttp;
 

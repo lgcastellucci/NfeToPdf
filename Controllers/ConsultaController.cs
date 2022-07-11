@@ -21,6 +21,7 @@ namespace NfeToPdf.Controllers
             Acessos acessos = new Acessos();
             string codAcesso = acessos.Inserir("GET", httpRequest.Url.ToString(), null, null, httpRequest.UserHostAddress);
 
+            #region Validando parametros obrigatórios para cada prefeitura
             if (prestadorMunicipio == "3507506") //botucatu
             {
                 StringBuilder msgCamposObrigatorios = new StringBuilder();
@@ -53,7 +54,9 @@ namespace NfeToPdf.Controllers
             {
                 return Retorno(msgRetorno("0006"));
             }
+            #endregion
 
+            #region Consultas de modelo
             if ((prestadorMunicipio == "3507506") && tomadorCNPJ == "12345678901234" && (rps == "123456"))
             {
                 var retorno = new HttpResponseMessage();
@@ -111,6 +114,7 @@ namespace NfeToPdf.Controllers
 
                 return retorno;
             }
+            #endregion
 
             if (prestadorMunicipio == "3507506")
             {
