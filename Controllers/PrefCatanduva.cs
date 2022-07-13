@@ -12,7 +12,7 @@ namespace NfeToPdf.Controllers
     public class PrefCatanduva : Controller
     {
         readonly string url = "http://catanduva.sp.gov.br:58080/issweb/paginas/public/consulta/autenticidade";
-        public Resposta Executar(string codAcesso, string tomadorCNPJ, string nroNota, string codVerificacao)
+        public Resposta Executar(string codAcesso, string prestadorCNPJ, string nroNota, string codVerificacao)
         {
             Resposta resposta = new Resposta();
             resposta.Sucesso = false;
@@ -63,7 +63,7 @@ namespace NfeToPdf.Controllers
             conteudoPost += "javax.faces.partial.execute=%40all&";
             conteudoPost += "javax.faces.partial.render=formAutenticidade&";
             conteudoPost += "formAutenticidade%3Aj_idt122=formAutenticidade%3Aj_idt122&formAutenticidade=formAutenticidade&";
-            conteudoPost += "formAutenticidade%3AitCpfCnpj=" + tomadorCNPJ + "&formAutenticidade%3AitNumeroNfse=" + nroNota + "&formAutenticidade%3AsorAutenticacao=V&formAutenticidade%3AitChaveAcesso=" + codVerificacao + "&";
+            conteudoPost += "formAutenticidade%3AitCpfCnpj=" + prestadorCNPJ + "&formAutenticidade%3AitNumeroNfse=" + nroNota + "&formAutenticidade%3AsorAutenticacao=V&formAutenticidade%3AitChaveAcesso=" + codVerificacao + "&";
             conteudoPost += "javax.faces.ViewState=" + viewState.Replace(":", "%3A");
 
             httpService.PayLoadSet(conteudoPost, Encoding.UTF8, "application/x-www-form-urlencoded");

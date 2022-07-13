@@ -12,7 +12,7 @@ namespace NfeToPdf.Controllers
     public class PrefBotucatu : Controller
     {
         readonly string url = "http://botucatu.bsit-br.com.br/nfse/rps-validation.jsf";
-        public Resposta Executar(string codAcesso, string tomadorCNPJ, string rpsNumero)
+        public Resposta Executar(string codAcesso, string prestadorCNPJ, string rpsNumero)
         {
             Resposta resposta = new Resposta();
             resposta.Sucesso = false;
@@ -80,7 +80,7 @@ namespace NfeToPdf.Controllers
             conteudoPost += "AJAXREQUEST=_viewRoot";
             conteudoPost += "&validationNFSEForm=validationNFSEForm";
             conteudoPost += "&validationNFSEForm%3AtypePerson=J";
-            conteudoPost += "&validationNFSEForm%3ApersonCNPJ=" + tomadorCNPJ;
+            conteudoPost += "&validationNFSEForm%3ApersonCNPJ=" + prestadorCNPJ;
             conteudoPost += "&validationNFSEForm%3AverificationCode=" + rpsNumero;
             conteudoPost += "&javax.faces.ViewState=j_id1";
             conteudoPost += "&validationNFSEForm%3Averify=validationNFSEForm%3Averify&";

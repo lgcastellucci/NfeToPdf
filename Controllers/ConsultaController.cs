@@ -14,7 +14,7 @@ namespace NfeToPdf.Controllers
         /// <summary>
         /// Classe utilizada retornar o PDF da Nfe
         /// </summary>
-        public HttpResponseMessage Get(string prestadorMunicipio = null, string tomadorCNPJ = null, string rps = null, string nroNota = null, string codVerificacao = null)
+        public HttpResponseMessage Get(string prestadorMunicipio = null, string prestadorCNPJ = null, string prestadorIM = null, string rps = null, string nroNota = null, string codVerificacao = null)
         {
             HttpRequest httpRequest = HttpContext.Current.Request;
 
@@ -27,7 +27,7 @@ namespace NfeToPdf.Controllers
                 StringBuilder msgCamposObrigatorios = new StringBuilder();
                 if (string.IsNullOrEmpty(prestadorMunicipio))
                     msgCamposObrigatorios.AppendLine(msgRetorno("0001"));
-                if (string.IsNullOrEmpty(tomadorCNPJ))
+                if (string.IsNullOrEmpty(prestadorCNPJ))
                     msgCamposObrigatorios.AppendLine(msgRetorno("0002"));
                 if (string.IsNullOrEmpty(rps))
                     msgCamposObrigatorios.AppendLine(msgRetorno("0003"));
@@ -40,8 +40,25 @@ namespace NfeToPdf.Controllers
                 StringBuilder msgCamposObrigatorios = new StringBuilder();
                 if (string.IsNullOrEmpty(prestadorMunicipio))
                     msgCamposObrigatorios.AppendLine(msgRetorno("0001"));
-                if (string.IsNullOrEmpty(tomadorCNPJ))
+                if (string.IsNullOrEmpty(prestadorCNPJ))
                     msgCamposObrigatorios.AppendLine(msgRetorno("0002"));
+                if (string.IsNullOrEmpty(nroNota))
+                    msgCamposObrigatorios.AppendLine(msgRetorno("0004"));
+                if (string.IsNullOrEmpty(codVerificacao))
+                    msgCamposObrigatorios.AppendLine(msgRetorno("0005"));
+
+                if (!string.IsNullOrEmpty(msgCamposObrigatorios.ToString()))
+                    return Retorno(msgCamposObrigatorios.ToString());
+            }
+            else if (prestadorMunicipio == "3552205") //sorocaba
+            {
+                StringBuilder msgCamposObrigatorios = new StringBuilder();
+                if (string.IsNullOrEmpty(prestadorMunicipio))
+                    msgCamposObrigatorios.AppendLine(msgRetorno("0001"));
+                if (string.IsNullOrEmpty(prestadorCNPJ))
+                    msgCamposObrigatorios.AppendLine(msgRetorno("0002"));
+                if (string.IsNullOrEmpty(prestadorIM))
+                    msgCamposObrigatorios.AppendLine(msgRetorno("0009"));
                 if (string.IsNullOrEmpty(nroNota))
                     msgCamposObrigatorios.AppendLine(msgRetorno("0004"));
                 if (string.IsNullOrEmpty(codVerificacao))
@@ -57,7 +74,7 @@ namespace NfeToPdf.Controllers
             #endregion
 
             #region Consultas de modelo
-            if ((prestadorMunicipio == "3507506") && tomadorCNPJ == "12345678901234" && (rps == "123456"))
+            if ((prestadorMunicipio == "3507506") && (prestadorCNPJ == "12345678901234") && (rps == "123456"))
             {
                 var retorno = new HttpResponseMessage();
                 retorno.StatusCode = HttpStatusCode.NotFound;
@@ -86,7 +103,36 @@ namespace NfeToPdf.Controllers
                 return retorno;
             }
 
-            if ((prestadorMunicipio == "3511102") && tomadorCNPJ == "12345678901234" && (nroNota == "123456") && (codVerificacao == "123KEY123"))
+            if ((prestadorMunicipio == "3511102") && (prestadorCNPJ == "12345678901234") && (nroNota == "123456") && (codVerificacao == "123KEY123"))
+            {
+                var retorno = new HttpResponseMessage();
+                retorno.StatusCode = HttpStatusCode.NotFound;
+
+                FileStream fileStream = new FileStream(HttpContext.Current.Server.MapPath("~/Arquivos/NfeToPdf.pdf"), FileMode.Open, FileAccess.Read);
+                try
+                {
+                    int length = (int)fileStream.Length;  // get file length
+                    byte[] buffer = new byte[length];     // create buffer
+                    int count;                            // actual number of bytes read
+                    int sum = 0;                          // total number of bytes read
+
+                    // read until Read method returns 0 (end of the stream has been reached)
+                    while ((count = fileStream.Read(buffer, sum, length - sum)) > 0)
+                        sum += count;  // sum is a buffer offset for next reading
+
+                    retorno.StatusCode = HttpStatusCode.OK;
+                    retorno.Content = new ByteArrayContent(buffer);
+                    retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                }
+                finally
+                {
+                    fileStream.Close();
+                }
+
+                return retorno;
+            }
+
+            if ((prestadorMunicipio == "3552205") && (prestadorCNPJ == "12345678901234") && (prestadorIM == "12345") && (nroNota == "123456") && (codVerificacao == "123KEY123"))
             {
                 var retorno = new HttpResponseMessage();
                 retorno.StatusCode = HttpStatusCode.NotFound;
@@ -119,7 +165,7 @@ namespace NfeToPdf.Controllers
             if (prestadorMunicipio == "3507506")
             {
                 PrefBotucatu pref = new PrefBotucatu();
-                Resposta respostaPref = pref.Executar(codAcesso, tomadorCNPJ, rps);
+                Resposta respostaPref = pref.Executar(codAcesso, prestadorCNPJ, rps);
 
                 if (respostaPref.Sucesso)
                 {
@@ -137,7 +183,7 @@ namespace NfeToPdf.Controllers
             else if (prestadorMunicipio == "3511102")
             {
                 PrefCatanduva pref = new PrefCatanduva();
-                Resposta respostaPref = pref.Executar(codAcesso, tomadorCNPJ, nroNota, codVerificacao);
+                Resposta respostaPref = pref.Executar(codAcesso, prestadorCNPJ, nroNota, codVerificacao);
 
                 if (respostaPref.Sucesso)
                 {
@@ -152,6 +198,25 @@ namespace NfeToPdf.Controllers
                     return Retorno("0008");
                 }
             }
+            else if (prestadorMunicipio == "3552205")
+            {
+                PrefSorocaba pref = new PrefSorocaba();
+                Resposta respostaPref = pref.Executar(codAcesso, prestadorCNPJ, prestadorIM, nroNota, codVerificacao);
+
+                if (respostaPref.Sucesso)
+                {
+                    var retorno = new HttpResponseMessage();
+                    retorno.StatusCode = HttpStatusCode.OK;
+                    retorno.Content = new ByteArrayContent(respostaPref.PdfArrayBytes);
+                    retorno.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                    return retorno;
+                }
+                else
+                {
+                    return Retorno("0010");
+                }
+            }
+            
 
             return Retorno("0009");
         }
@@ -181,7 +246,7 @@ namespace NfeToPdf.Controllers
             }
             else if (codRetorno == "0002")
             {
-                return "<center>CNPJ do tomador é obrigatorio</center><br>";
+                return "<center>CNPJ do prestador é obrigatorio</center><br>";
             }
             else if (codRetorno == "0003")
             {
@@ -206,6 +271,15 @@ namespace NfeToPdf.Controllers
                        "  <center>Não foi possivel acessar a prefeitura</center><br>";
             }
             else if (codRetorno == "0008")
+            {
+                return "  <center>Erro ao consultar NFE</center><br>" +
+                       "  <center>Contate nfetopdf@castellucci.net.br</center>";
+            }
+            else if (codRetorno == "0009")
+            {
+                return "<center>Inscricao Municipal do prestador é obrigatorio</center><br>";
+            }
+            else if (codRetorno == "0010")
             {
                 return "  <center>Erro ao consultar NFE</center><br>" +
                        "  <center>Contate nfetopdf@castellucci.net.br</center>";
